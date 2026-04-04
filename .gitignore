@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Streamlit secrets (API keys - NEVER commit)
+.streamlit/secrets.toml
