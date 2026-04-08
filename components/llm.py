@@ -100,6 +100,13 @@ def analyze_with_groq(text: str, api_key: str, context: str = "", model: str = "
     return result
 
 
+def analyze_for_label(text: str, api_key: str, domain: str = "general", model: str = "llama-3.3-70b-versatile") -> dict:
+    """Analyze pasted AI text and return T,I,F for the Nutrition Label."""
+    result = analyze_with_groq(text, api_key, context=domain, model=model)
+    result.setdefault("what_i_dont_know", result.get("zone_reason", ""))
+    return result
+
+
 def generate_honest_response(question: str, api_key: str, domain: str = "general", model: str = "llama-3.3-70b-versatile") -> dict:
     """Generate an honest response WITH T,I,F assessment built in."""
     client = Groq(api_key=api_key)

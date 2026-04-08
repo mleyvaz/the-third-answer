@@ -43,6 +43,7 @@ with st.sidebar:
     - **Error Detector** — Identify AI error types
     - **Prompt Templates** — Ready-to-use prompts
     - **The Honest Machine** — Interactive demo
+    - **🏷 Nutrition Label** — Generate Epistemic Nutrition Labels
     """)
     st.divider()
     st.caption("Leyva-Vazquez & Smarandache, 2026")
@@ -131,6 +132,7 @@ st.markdown("""
 3. **🔍 Error Detector** — Learn to identify the 4 types of AI errors (Chapter 1)
 4. **📋 Prompt Templates** — Copy ready-made prompts that force AI to express uncertainty
 5. **🤖 The Honest Machine** — See what AI outputs would look like WITH the Third Answer
+6. **🏷 Nutrition Label** — Generate visual Epistemic Nutrition Labels for any AI output
 
 ---
 **Book:** *The Third Answer: Why AI Doesn't Know What It Doesn't Know — And How Ancient Logic Can Fix It*
