@@ -1,5 +1,6 @@
 """Epistemic Nutrition Label — Generate a visual T,I,F label for any AI output."""
 import streamlit as st
+import streamlit.components.v1 as components
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from components.tif_calculator import classify_zone, ZONE_INFO
@@ -11,70 +12,11 @@ st.markdown("# 🏷 Epistemic Nutrition Label")
 st.markdown("*The FDA regulates what you eat. This regulates the epistemic quality of what AI tells you.*")
 st.divider()
 
-# --- CSS for the label ---
-st.markdown("""
-<style>
-.enl-container {
-    max-width: 420px;
-    border: 3px solid #1e293b;
-    border-radius: 12px;
-    padding: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    background: #ffffff;
-    margin: 0 auto;
-}
-.enl-header {
-    background: #1e293b;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 9px 9px 0 0;
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-.enl-body { padding: 16px 20px; }
-.enl-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #e2e8f0;
-}
-.enl-row-label { font-weight: 600; font-size: 0.95rem; color: #334155; }
-.enl-row-value { font-weight: 800; font-size: 1.1rem; }
-.enl-bar-container {
-    width: 140px; height: 16px; background: #e2e8f0;
-    border-radius: 8px; overflow: hidden; display: inline-block;
-    vertical-align: middle; margin-right: 8px;
-}
-.enl-bar { height: 100%; border-radius: 8px; }
-.enl-zone {
-    text-align: center; padding: 12px 0; margin-top: 8px;
-    border-top: 2px solid #1e293b;
-}
-.enl-zone-emoji { font-size: 2rem; }
-.enl-zone-name { font-size: 1.2rem; font-weight: 800; }
-.enl-zone-action { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
-.enl-meta {
-    font-size: 0.75rem; color: #94a3b8; text-align: center;
-    padding: 8px 0; border-top: 1px solid #e2e8f0;
-}
-.enl-para {
-    text-align: center; padding: 6px 0;
-    font-size: 0.85rem; font-weight: 700;
-}
-.enl-footer {
-    background: #f8fafc; padding: 8px 16px;
-    border-radius: 0 0 9px 9px; text-align: center;
-    font-size: 0.75rem; color: #94a3b8;
-}
-</style>
-""", unsafe_allow_html=True)
+# CSS is now embedded inline in render_label_html() for iframe rendering
 
 
 def render_label_html(t, i, f, zone_key, claim_text="", source_info=""):
-    """Generate the Epistemic Nutrition Label as HTML."""
+    """Generate the Epistemic Nutrition Label as a full standalone HTML page for iframe rendering."""
     zone = ZONE_INFO[zone_key]
     is_para = (t + f) > 1.0
     confidence = max(0.0, t - i - f)
@@ -85,58 +27,56 @@ def render_label_html(t, i, f, zone_key, claim_text="", source_info=""):
 
     para_html = ""
     if is_para:
-        para_html = f'<div class="enl-para" style="color: #f97316;">⚠ PARACONSISTENT (T+F = {t+f:.2f} &gt; 1.0)</div>'
+        para_html = f'<div style="text-align:center;padding:6px 0;font-size:0.85rem;font-weight:700;color:#f97316;">&#9888; PARACONSISTENT (T+F = {t+f:.2f} &gt; 1.0)</div>'
 
     claim_html = ""
     if claim_text:
         short = claim_text[:80] + "..." if len(claim_text) > 80 else claim_text
-        claim_html = f'<div style="padding: 8px 0; font-size: 0.85rem; color: #475569; border-bottom: 1px solid #e2e8f0; font-style: italic;">"{short}"</div>'
+        claim_html = f'<div style="padding:8px 0;font-size:0.85rem;color:#475569;border-bottom:1px solid #e2e8f0;font-style:italic;">&ldquo;{short}&rdquo;</div>'
 
     source_html = ""
     if source_info:
-        source_html = f'<div style="font-size: 0.75rem; color: #64748b; padding: 4px 0;">{source_info}</div>'
+        source_html = f'<div style="font-size:0.75rem;color:#64748b;padding:4px 0;">{source_info}</div>'
 
-    return f"""
-    <div class="enl-container">
-        <div class="enl-header">EPISTEMIC NUTRITION LABEL</div>
-        <div class="enl-body">
-            {claim_html}
-            <div class="enl-row">
-                <span class="enl-row-label">Truth (T)</span>
-                <span>
-                    <span class="enl-bar-container"><span class="enl-bar" style="width:{t*100}%; background:{bar_color_t};"></span></span>
-                    <span class="enl-row-value" style="color:{bar_color_t};">{t:.2f}</span>
-                </span>
-            </div>
-            <div class="enl-row">
-                <span class="enl-row-label">Indeterminacy (I)</span>
-                <span>
-                    <span class="enl-bar-container"><span class="enl-bar" style="width:{i*100}%; background:{bar_color_i};"></span></span>
-                    <span class="enl-row-value" style="color:{bar_color_i};">{i:.2f}</span>
-                </span>
-            </div>
-            <div class="enl-row">
-                <span class="enl-row-label">Falsity (F)</span>
-                <span>
-                    <span class="enl-bar-container"><span class="enl-bar" style="width:{f*100}%; background:{bar_color_f};"></span></span>
-                    <span class="enl-row-value" style="color:{bar_color_f};">{f:.2f}</span>
-                </span>
-            </div>
-            <div class="enl-row">
-                <span class="enl-row-label">Confidence</span>
-                <span class="enl-row-value" style="color: #334155;">{confidence:.2f}</span>
-            </div>
-            {para_html}
-            <div class="enl-zone">
-                <div class="enl-zone-emoji">{zone['emoji']}</div>
-                <div class="enl-zone-name" style="color:{zone['color']};">{zone['name']}</div>
-                <div class="enl-zone-action">{zone['action']}</div>
-            </div>
-            {source_html}
-        </div>
-        <div class="enl-footer">Powered by thirdanswer | Leyva-Vazquez &amp; Smarandache (2026)</div>
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+body {{ margin:0; padding:10px; font-family:'Helvetica Neue',Arial,sans-serif; background:transparent; }}
+.enl {{ max-width:400px; border:3px solid #1e293b; border-radius:12px; background:#fff; margin:0 auto; }}
+.hdr {{ background:#1e293b; color:#fff; padding:12px 16px; border-radius:9px 9px 0 0; text-align:center; font-size:1.05rem; font-weight:800; letter-spacing:1px; }}
+.bdy {{ padding:16px 20px; }}
+.row {{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #e2e8f0; }}
+.lbl {{ font-weight:600; font-size:0.9rem; color:#334155; }}
+.val {{ font-weight:800; font-size:1.05rem; }}
+.bar-c {{ width:130px; height:14px; background:#e2e8f0; border-radius:7px; overflow:hidden; display:inline-block; vertical-align:middle; margin-right:6px; }}
+.bar {{ height:100%; border-radius:7px; }}
+.zone {{ text-align:center; padding:12px 0; margin-top:8px; border-top:2px solid #1e293b; }}
+.ftr {{ background:#f8fafc; padding:8px 16px; border-radius:0 0 9px 9px; text-align:center; font-size:0.7rem; color:#94a3b8; }}
+</style></head><body>
+<div class="enl">
+  <div class="hdr">EPISTEMIC NUTRITION LABEL</div>
+  <div class="bdy">
+    {claim_html}
+    <div class="row"><span class="lbl">Truth (T)</span><span><span class="bar-c"><span class="bar" style="width:{t*100}%;background:{bar_color_t};"></span></span><span class="val" style="color:{bar_color_t};">{t:.2f}</span></span></div>
+    <div class="row"><span class="lbl">Indeterminacy (I)</span><span><span class="bar-c"><span class="bar" style="width:{i*100}%;background:{bar_color_i};"></span></span><span class="val" style="color:{bar_color_i};">{i:.2f}</span></span></div>
+    <div class="row"><span class="lbl">Falsity (F)</span><span><span class="bar-c"><span class="bar" style="width:{f*100}%;background:{bar_color_f};"></span></span><span class="val" style="color:{bar_color_f};">{f:.2f}</span></span></div>
+    <div class="row"><span class="lbl">Confidence</span><span class="val" style="color:#334155;">{confidence:.2f}</span></div>
+    {para_html}
+    <div class="zone">
+      <div style="font-size:2rem;">{zone['emoji']}</div>
+      <div style="font-size:1.2rem;font-weight:800;color:{zone['color']};">{zone['name']}</div>
+      <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">{zone['action']}</div>
     </div>
-    """
+    {source_html}
+  </div>
+  <div class="ftr">Powered by thirdanswer | Leyva-Vazquez &amp; Smarandache (2026)</div>
+</div>
+</body></html>"""
+
+
+def show_label(t, i, f, zone_key, claim_text="", source_info=""):
+    """Render the label using components.html (iframe) so CSS renders correctly."""
+    html = render_label_html(t, i, f, zone_key, claim_text, source_info)
+    components.html(html, height=420, scrolling=False)
 
 
 # === TABS ===
@@ -164,8 +104,7 @@ with tab_manual:
 
     with col_label:
         zone_key = classify_zone(t_val, i_val, f_val)
-        html = render_label_html(t_val, i_val, f_val, zone_key, claim, source)
-        st.markdown(html, unsafe_allow_html=True)
+        show_label(t_val, i_val, f_val, zone_key, claim, source)
 
         st.markdown("")
         fig = create_radar_chart(t_val, i_val, f_val, ZONE_INFO[zone_key]["color"])
@@ -227,9 +166,8 @@ with tab_ai:
 
         col_l, col_r = st.columns([1, 1])
         with col_l:
-            html = render_label_html(t_v, i_v, f_v, zk,
-                                     st.session_state.get("label_text", "")[:100])
-            st.markdown(html, unsafe_allow_html=True)
+            show_label(t_v, i_v, f_v, zk,
+                       st.session_state.get("label_text", "")[:100])
         with col_r:
             fig = create_radar_chart(t_v, i_v, f_v, ZONE_INFO[zk]["color"])
             st.plotly_chart(fig, use_container_width=True)
@@ -282,11 +220,8 @@ with tab_examples:
     for idx, item in enumerate(gallery):
         zk = classify_zone(item["t"], item["i"], item["f"])
         with cols[idx % 2]:
-            html = render_label_html(
-                item["t"], item["i"], item["f"], zk,
-                item["claim"], item["source"]
-            )
-            st.markdown(html, unsafe_allow_html=True)
+            show_label(item["t"], item["i"], item["f"], zk,
+                       item["claim"], item["source"])
             st.markdown("")
 
 st.divider()
